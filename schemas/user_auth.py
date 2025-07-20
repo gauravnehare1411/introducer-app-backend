@@ -8,6 +8,8 @@ from passlib.context import CryptContext
 from models.user_models import UserInDB, TokenData
 from config.database import users_collection, SECRET_KEY, ALGORITHM
 import jwt
+import random
+import string
 
 
 ACCESS_TOKEN_EXPIRE_SECONDS = 3600
@@ -41,8 +43,8 @@ def create_refresh_token(data: dict, expires_delta: timedelta):
     })
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-async def get_user(username: str):
-    user_dict = await users_collection.find_one({"username": username})
+async def get_user(email: str):
+    user_dict = await users_collection.find_one({"email": email})
     if user_dict:
         # Map database field 'password' to 'hashed_password'
         user_dict["hashed_password"] = user_dict.pop("password", None)
@@ -50,8 +52,8 @@ async def get_user(username: str):
         return UserInDB(**user_dict)
     return None
 
-async def authenticate_user(username: str, password: str):
-    user = await get_user(username)
+async def authenticate_user(email: str, password: str):
+    user = await get_user(email)
     if not user:
         return False	
     if not verify_password(password, user.hashed_password):
@@ -74,17 +76,28 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
                 detail="Invalid token scope. Use an access token."
             )
         
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(email=email)
 
     except InvalidTokenError:
         raise credentials_exception
     
-    user = await get_user(username=token_data.username)
+    user = await get_user(email=token_data.email)
 
     if user is None:
         raise credentials_exception
     
     return user
+
+
+async def generate_unique_referral_id(name: str) -> str:
+    while True:
+        initials = ''.join([part[0].upper() for part in name.split() if part]) if name else 'XX'
+        random_suffix = ''.join(random.choices(string.digits, k=4))
+        referral_id = f"{initials}{random_suffix}"
+        
+        existing_user = await users_collection.find_one({"referralId": referral_id})
+        if not existing_user:
+            return referral_id

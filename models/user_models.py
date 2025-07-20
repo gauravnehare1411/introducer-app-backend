@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+
 
 class Token(BaseModel):
     access_token: str
@@ -6,29 +7,31 @@ class Token(BaseModel):
     token_type: str
     expires_in: int
 
+
 class TokenData(BaseModel):
-    username: str | None = None
+    email: EmailStr | None = None  # was `username`
+
 
 class RegisterUser(BaseModel):
-    username: str
     name: str | None = None
-    email: str | None = None
+    email: EmailStr
     contactnumber: int | None = None
     password: str
 
 
 class User(BaseModel):
     userId: str
-    username: str
     name: str | None = None
-    email: str | None = None
+    email: EmailStr
     contactnumber: int | None = None
+    referralId: str | None = None
+
 
 class UserInDB(User):
     hashed_password: str
 
+
 class UserUpdate(BaseModel):
-    username: str
     name: str | None = None
-    email: str | None = None
+    email: EmailStr
     contactnumber: int | None = None
