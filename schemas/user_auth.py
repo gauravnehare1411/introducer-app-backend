@@ -10,6 +10,13 @@ from config.database import users_collection, SECRET_KEY, ALGORITHM
 import jwt
 import random
 import string
+import smtplib
+from email.mime.text import MIMEText
+from dotenv import find_dotenv, load_dotenv
+import os
+
+dotenv_path = find_dotenv()
+load_dotenv(dotenv_path)
 
 
 ACCESS_TOKEN_EXPIRE_SECONDS = 3600
@@ -101,3 +108,26 @@ async def generate_unique_referral_id(name: str) -> str:
         existing_user = await users_collection.find_one({"referralId": referral_id})
         if not existing_user:
             return referral_id
+        
+
+async def send_verification_email(to_email: str, code: str):
+    sender_email = os.getenv("email_address")
+    sender_password = os.getenv("email_password")
+    subject = "Verify your email"
+    body = f"Your verification code is: {code}"
+
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = sender_email
+    msg["To"] = to_email
+
+    # Hostinger SMTP config
+    smtp_server = "smtp.hostinger.com"
+    smtp_port = 465
+
+    try:
+        with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+    except Exception as e:
+        print(f"Email send failed: {e}")

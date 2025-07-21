@@ -35,3 +35,6 @@ class UserUpdate(BaseModel):
     name: str | None = None
     email: EmailStr
     contactnumber: int | None = None
+
+class EmailOnlyRequest(BaseModel):
+    email: EmailStr

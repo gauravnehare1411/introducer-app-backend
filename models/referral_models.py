@@ -8,3 +8,5 @@ class ReferralCreate(BaseModel):
     referralEmail: EmailStr
     purpose: str
     comment: Optional[str] = None
+
+
