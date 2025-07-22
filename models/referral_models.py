@@ -9,4 +9,5 @@ class ReferralCreate(BaseModel):
     purpose: str
     comment: Optional[str] = None
 
-
+class StatusUpdate(BaseModel):
+    status: str

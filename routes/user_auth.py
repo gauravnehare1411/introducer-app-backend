@@ -30,6 +30,7 @@ async def start_registration(request: RegisterUser, background_tasks: Background
             "contactnumber": request.contactnumber,
             "password": hash_password(request.password),
             "code": verification_code,
+            "role": "user",
             "expires_at": datetime.utcnow() + timedelta(minutes=5)
         })
 
@@ -75,7 +76,7 @@ async def resend_code(request: EmailOnlyRequest, background_tasks: BackgroundTas
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
-@router.post("/verify-code", response_model=Token)
+@router.post("/verify-code", response_model=Token)  
 async def verify_code(email: str = Form(...), code: str = Form(...)):
     try:
         email = email.lower()
@@ -98,6 +99,8 @@ async def verify_code(email: str = Form(...), code: str = Form(...)):
             "contactnumber": verification["contactnumber"],
             "referralId": referral_id,
             "password": verification["password"],
+            "role": verification["role"],
+            "created_at": datetime.utcnow(),
         }
 
         await users_collection.insert_one(user_data)
@@ -108,14 +111,14 @@ async def verify_code(email: str = Form(...), code: str = Form(...)):
         refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
         access_token = create_access_token(
-            data={"sub": email}, expires_delta=access_token_expires
+            data={"sub": email, "role": verification["role"]}, expires_delta=access_token_expires
         )
 
         refresh_token = create_refresh_token(
-            data={"sub": email}, expires_delta=refresh_token_expires
+            data={"sub": email, "role": verification["role"]}, expires_delta=refresh_token_expires
         )
 
-        return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer", expires_in=ACCESS_TOKEN_EXPIRE_SECONDS)
+        return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer", expires_in=ACCESS_TOKEN_EXPIRE_SECONDS, role=verification["role"])
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
@@ -136,13 +139,13 @@ async def login_for_access_token(
     refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"sub": user.email, "role": user.role}, expires_delta=access_token_expires
     )
     refresh_token = create_refresh_token(
-        data={"sub": user.email}, expires_delta=refresh_token_expires
+        data={"sub": user.email, "role": user.role}, expires_delta=refresh_token_expires
     )
 
-    return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer", expires_in=ACCESS_TOKEN_EXPIRE_SECONDS)
+    return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer", expires_in=ACCESS_TOKEN_EXPIRE_SECONDS, role=user.role)
 
 
 @router.post("/token/refresh", response_model=Token)
@@ -164,13 +167,13 @@ async def refresh_access_token(refresh_token: str):
         refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
         access_token = create_access_token(
-            data={"sub": email}, expires_delta=access_token_expires
+            data={"sub": email, "role": user["role"]}, expires_delta=access_token_expires
         )
         refresh_token = create_refresh_token(
-            data={"sub": email}, expires_delta=refresh_token_expires
+            data={"sub": email, "role": user["role"]}, expires_delta=refresh_token_expires
         )
 
-        return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer", expires_in=ACCESS_TOKEN_EXPIRE_SECONDS)
+        return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer", expires_in=ACCESS_TOKEN_EXPIRE_SECONDS, role=user["role"])
 
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
