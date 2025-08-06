@@ -4,6 +4,7 @@ from models.referral_models import ReferralCreate
 from config.database import referrals_collection
 from uuid import uuid4
 from schemas.user_auth import get_current_user
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
@@ -15,7 +16,8 @@ async def submit_referral(referral: ReferralCreate, current_user: User = Depends
         referral_data.update({
             "_id": str(uuid4()),
             "referralId": current_user.referralId,
-            "status": "pending"
+            "created_at": datetime.utcnow(),
+            "status": "Pending",
         })
         print(referral_data)
         await referrals_collection.insert_one(referral_data)

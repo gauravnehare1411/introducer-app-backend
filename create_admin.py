@@ -1,4 +1,3 @@
-# create_admin.py
 import asyncio
 import uuid
 from getpass import getpass

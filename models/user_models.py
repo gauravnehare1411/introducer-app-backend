@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
+from typing import Optional
 
 
 class Token(BaseModel):
@@ -41,3 +42,25 @@ class UserUpdate(BaseModel):
 
 class EmailOnlyRequest(BaseModel):
     email: EmailStr
+
+class PasswordResetRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    contactnumber: Optional[str] = None
+
+class AdminUserUpdate(BaseModel):
+    name: Optional[str] = None
+    contactnumber: Optional[str] = None
+
+
+ALLOWED_REFERRAL_STATUSES = {"Pending", "Approved", "Rejected"}
+
+def _normalize_status(value: str) -> str:
+    """Normalize inputs like 'pending', 'PENDING' -> 'Pending'."""
+    return value.strip().capitalize()

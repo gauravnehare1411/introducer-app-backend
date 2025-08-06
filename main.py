@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import  user_auth, mortgage, referrals, admin
+from routes import  user_auth, referrals, admin, user_details
 
 app = FastAPI()
 
 app.include_router(user_auth.router)
-app.include_router(mortgage.router)
 app.include_router(referrals.router)
 app.include_router(admin.router)
+app.include_router(user_details.router)
 
 app.add_middleware(
     CORSMiddleware,
