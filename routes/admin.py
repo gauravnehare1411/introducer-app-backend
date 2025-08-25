@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, status as http_status
 from bson import ObjectId
-from config.database import users_collection, referrals_collection
+from config.database import users_collection, referrals_collection, registrations
 from models.referral_models import StatusUpdate
 from models.user_models import _normalize_status, ALLOWED_REFERRAL_STATUSES
 from schemas.user_auth import require_admin
@@ -117,3 +117,9 @@ async def list_referrals(status: Optional[str] = Query(
         items.append(doc)
 
     return items
+
+@router.get("/registrations")
+async def get_registrations():
+    regs_cursor = registrations.find({})
+    regs = [fix_id(user) async for user in regs_cursor]
+    return regs
