@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from config.database import registrations
-from reg_model import Registration
+from routes.Reg.reg_model import Registration
 
 router = APIRouter()
 
