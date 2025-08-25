@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import  user_auth, referrals, admin, user_details
+from routes.Reg import reg
 
 app = FastAPI()
 
@@ -8,6 +9,7 @@ app.include_router(user_auth.router)
 app.include_router(referrals.router)
 app.include_router(admin.router)
 app.include_router(user_details.router)
+app.include_router(reg.router)
 
 app.add_middleware(
     CORSMiddleware,
