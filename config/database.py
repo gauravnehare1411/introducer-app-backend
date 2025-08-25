@@ -16,3 +16,5 @@ users_collection = db.users_collection
 referrals_collection = db.referrals_collection
 verification_collection = db.verification_collection
 
+registrations = db.registrations
+
