@@ -61,7 +61,7 @@ async def password_reset_request(request: PasswordResetRequest):
         data={'sub': email, 'roles': user_roles},
         expires_delta=access_token_expires
     )
-    reset_link = f"http://localhost:5173/reset-password?token={token}"
+    reset_link = f"limegreen-vulture-260835.hostingersite.com/reset-password?token={token}"
 
     send_email(email, reset_link)
     return {"message": "Password reset link sent successfully."}
