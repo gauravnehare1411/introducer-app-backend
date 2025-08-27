@@ -54,13 +54,14 @@ async def password_reset_request(request: PasswordResetRequest):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user_role = str(user["role"])
+    # Get roles array instead of single role
+    user_roles = user.get("roles", [])
     access_token_expires = timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
     token = create_access_token(
-            data={'sub': email, 'role': user_role}, 
-            expires_delta=access_token_expires
-        )
-    reset_link = f"http://aaifinancials.com/introducer/reset-password?token={token}"
+        data={'sub': email, 'roles': user_roles},
+        expires_delta=access_token_expires
+    )
+    reset_link = f"http://localhost:5173/reset-password?token={token}"
 
     send_email(email, reset_link)
     return {"message": "Password reset link sent successfully."}

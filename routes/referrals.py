@@ -3,13 +3,16 @@ from models.user_models import User
 from models.referral_models import ReferralCreate
 from config.database import referrals_collection
 from uuid import uuid4
-from schemas.user_auth import get_current_user
+from schemas.user_auth import requires_roles
 from datetime import datetime, timedelta
 
 router = APIRouter()
 
 @router.post("/submit-referral")
-async def submit_referral(referral: ReferralCreate, current_user: User = Depends(get_current_user)):
+async def submit_referral(
+    referral: ReferralCreate, 
+    current_user: User = Depends(requires_roles(["user"]))
+):
     try:
         referral_data = referral.dict()
         print(referral_data)
@@ -27,7 +30,9 @@ async def submit_referral(referral: ReferralCreate, current_user: User = Depends
 
 
 @router.get("/my-referrals")
-async def get_my_referrals(current_user: User = Depends(get_current_user)):
+async def get_my_referrals(
+    current_user: User = Depends(requires_roles(["user"]))
+):
     try:
         referrals = await referrals_collection.find({"referralId": current_user.referralId}).to_list(length=None)
         return referrals

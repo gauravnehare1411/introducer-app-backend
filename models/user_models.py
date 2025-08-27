@@ -1,18 +1,19 @@
 from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional
+from typing import Optional, List
 
+ALLOWED_ROLES = {"user", "admin", "customer"}
 
 class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
     expires_in: int
-    role: str
+    roles: List[str]
 
 
 class TokenData(BaseModel):
     email: EmailStr | None = None
-    role: str | None = None
+    roles: List[str] = []
 
 
 class RegisterUser(BaseModel):
@@ -20,6 +21,7 @@ class RegisterUser(BaseModel):
     email: EmailStr
     contactnumber: str | None = None
     password: str
+    roles: List[str]
 
 
 class User(BaseModel):
@@ -28,12 +30,10 @@ class User(BaseModel):
     email: EmailStr
     contactnumber: str | None = None
     referralId: str | None = None
-    role: str
-
+    roles: List[str]
 
 class UserInDB(User):
     hashed_password: str
-
 
 class UserUpdate(BaseModel):
     name: str | None = None

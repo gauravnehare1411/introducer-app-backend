@@ -3,17 +3,16 @@ from bson import ObjectId
 from config.database import users_collection, referrals_collection, registrations
 from models.referral_models import StatusUpdate
 from models.user_models import _normalize_status, ALLOWED_REFERRAL_STATUSES
-from schemas.user_auth import require_admin
+from schemas.user_auth import requires_roles
 from datetime import datetime
 from typing import Optional
 
 
 router = APIRouter(
     prefix="/admin",
-    dependencies=[Depends(require_admin)]
+    dependencies=[Depends(requires_roles(["admin"]))]
     )
 
-# Helper function to convert ObjectId to str
 def fix_id(doc):
     doc["_id"] = str(doc["_id"])
     return doc

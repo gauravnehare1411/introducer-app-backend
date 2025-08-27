@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -10,13 +10,8 @@ from config.database import users_collection, SECRET_KEY, ALGORITHM
 import jwt
 import random
 import string
-import smtplib
-from email.mime.text import MIMEText
-from dotenv import find_dotenv, load_dotenv
-import os
 
-dotenv_path = find_dotenv()
-load_dotenv(dotenv_path)
+
 
 
 ACCESS_TOKEN_EXPIRE_SECONDS = 3600
@@ -53,9 +48,13 @@ def create_refresh_token(data: dict, expires_delta: timedelta):
 async def get_user(email: str):
     user_dict = await users_collection.find_one({"email": email})
     if user_dict:
-        # Map database field 'password' to 'hashed_password'
-        user_dict["hashed_password"] = user_dict.pop("password", None)
-        user_dict["userId"] = user_dict.pop("_id", None)	
+        user_dict["hashed_password"] = user_dict.get("password")
+        
+        user_dict["userId"] = user_dict.get("_id")
+        
+        if "roles" in user_dict and not isinstance(user_dict["roles"], list):
+            user_dict["roles"] = [user_dict["roles"]]
+        
         return UserInDB(**user_dict)
     return None
 
@@ -98,14 +97,19 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     
     return user
 
-async def require_admin(current_user: dict = Depends(get_current_user)):
-    role = str(current_user.role or '').lower()
-    if role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
-    return current_user
+def requires_roles(allowed_roles: List[str]):
+    """Factory function to create role-based dependencies"""
+    async def role_checker(current_user: UserInDB = Depends(get_current_user)):
+        user_roles = current_user.roles if current_user.roles else []
+        
+        if not any(role.lower() in [r.lower() for r in allowed_roles] for role in user_roles):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied. Requires one of: {', '.join(allowed_roles)}"
+            )
+        return current_user
+    
+    return role_checker
 
 async def generate_unique_referral_id(name: str) -> str:
     while True:
@@ -116,26 +120,3 @@ async def generate_unique_referral_id(name: str) -> str:
         existing_user = await users_collection.find_one({"referralId": referral_id})
         if not existing_user:
             return referral_id
-        
-
-async def send_verification_email(to_email: str, code: str):
-    sender_email = os.getenv("email_address")
-    sender_password = os.getenv("email_password")
-    subject = "Verify your email"
-    body = f"Your verification code is: {code}"
-
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = sender_email
-    msg["To"] = to_email
-
-    # Hostinger SMTP config
-    smtp_server = "smtp.hostinger.com"
-    smtp_port = 465
-
-    try:
-        with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
-    except Exception as e:
-        print(f"Email send failed: {e}")
