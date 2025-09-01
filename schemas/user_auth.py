@@ -14,8 +14,8 @@ import string
 
 
 
-ACCESS_TOKEN_EXPIRE_SECONDS = 3600
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+ACCESS_TOKEN_EXPIRE_SECONDS = 3600 * 3600
+REFRESH_TOKEN_EXPIRE_DAYS = 7 * 7
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
