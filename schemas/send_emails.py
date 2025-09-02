@@ -63,3 +63,37 @@ Your App Team
     with smtplib.SMTP_SSL("smtp.hostinger.com", 465) as smtp:
         smtp.login(email_address, email_password)
         smtp.send_message(msg)
+
+def send_referral_email(to_email: str, referrer_email: str, referral_id: str):
+    """
+    Send referral email to the referred person.
+    """
+    msg = EmailMessage()
+
+    registration_link = "https://aaifinancials.com/app/sign-in"
+
+    message = f"""
+Hello,
+
+You have been referred by {referrer_email}.
+Referral ID: {referral_id}
+
+Click the link below to register as a customer:
+{registration_link}
+
+Best regards,
+Your App Team
+"""
+
+    msg["Subject"] = "You've been referred!"
+    msg["From"] = email_address
+    msg["To"] = to_email
+    msg.set_content(message)
+
+    try:
+        with smtplib.SMTP_SSL("smtp.hostinger.com", 465) as smtp:
+            smtp.login(email_address, email_password)
+            smtp.send_message(msg)
+        print("Referral email sent successfully")
+    except Exception as e:
+        print(f"Failed to send referral email: {e}")

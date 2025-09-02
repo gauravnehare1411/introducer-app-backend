@@ -1,6 +1,6 @@
 import uuid
 from fastapi import APIRouter, HTTPException, Form, BackgroundTasks
-from models.user_models import Token, RegisterUser, EmailOnlyRequest, ALLOWED_ROLES
+from models.user_models import Token, RegisterUser, EmailOnlyRequest, ALLOWED_ROLES, RefreshTokenRequest
 from schemas.user_auth import *
 from config.database import users_collection, verification_collection
 from fastapi.security import OAuth2PasswordRequestForm
@@ -248,13 +248,18 @@ async def login_for_access_token(
     )
 
 @router.post("/token/refresh", response_model=Token)
-async def refresh_access_token(refresh_token: str):
+async def refresh_access_token(request: RefreshTokenRequest):
     try:
-        # Decode and validate refresh token
+        refresh_token = request.refresh_token
+        
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+        token_type = payload.get("type")
+        if token_type != "refresh":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
 
         # Check if the user exists
         user = await users_collection.find_one({"email": email})
@@ -262,18 +267,26 @@ async def refresh_access_token(refresh_token: str):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         # Generate new access and refresh tokens
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_SECONDS)
+        access_token_expires = timedelta(seconds=ACCESS_TOKEN_EXPIRE_SECONDS)
         refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
+        # Use the same structure as your login endpoint
         access_token = create_access_token(
-            data={"sub": email, "role": user["role"]}, expires_delta=access_token_expires
+            data={"sub": user["email"], "roles": user["roles"]},
+            expires_delta=access_token_expires
         )
-        refresh_token = create_refresh_token(
-            data={"sub": email, "role": user["role"]}, expires_delta=refresh_token_expires
+        new_refresh_token = create_refresh_token(
+            data={"sub": user["email"], "roles": user["roles"]},
+            expires_delta=refresh_token_expires
         )
 
-        return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer", expires_in=ACCESS_TOKEN_EXPIRE_SECONDS, role=user["role"])
+        return Token(
+            access_token=access_token, 
+            refresh_token=new_refresh_token, 
+            token_type="bearer", 
+            expires_in=ACCESS_TOKEN_EXPIRE_SECONDS, 
+            roles=user["roles"]
+        )
 
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-

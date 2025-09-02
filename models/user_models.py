@@ -15,6 +15,9 @@ class TokenData(BaseModel):
     email: EmailStr | None = None
     roles: List[str] = []
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
 
 class RegisterUser(BaseModel):
     name: str | None = None

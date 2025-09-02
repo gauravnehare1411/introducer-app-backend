@@ -6,12 +6,13 @@ from uuid import uuid4
 from schemas.user_auth import requires_roles
 from datetime import datetime, timedelta
 from bson import ObjectId
+from schemas.send_emails import send_referral_email
 
 router = APIRouter()
 
 @router.post("/submit-referral")
 async def submit_referral(
-    referral: ReferralCreate, 
+    referral: ReferralCreate,
     current_user: User = Depends(requires_roles(["user"]))
 ):
     try:
@@ -24,6 +25,12 @@ async def submit_referral(
         })
         print(referral_data)
         await referrals_collection.insert_one(referral_data)
+
+        send_referral_email(
+            to_email=referral.email,
+            referrer_email=current_user.email,
+            referral_id=current_user.referralId
+        )
         return {"message": "Referral submitted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
@@ -44,7 +51,7 @@ async def get_my_referrals(
 async def delete_referral_by_id(id: str, current_user: User = Depends(requires_roles(["user"]))):
     try:
         referral = await referrals_collection.delete_one({"_id": id, "referralId": current_user.referralId})
-        
+
         if referral.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Referral not found or unauthorized")
 
