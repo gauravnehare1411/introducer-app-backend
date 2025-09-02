@@ -36,7 +36,7 @@ async def start_registration(request: RegisterUser, background_tasks: Background
             if conflicting_roles:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"User already has registered as {conflicting_roles}"
+                    detail=f"User already exist."
                 )
 
         # Remove previous verification attempts
