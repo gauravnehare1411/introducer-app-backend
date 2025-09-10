@@ -52,7 +52,8 @@ This link will expire in {RESET_TOKEN_EXPIRE_MINUTES} minutes.
 If you did not request a password reset, please ignore this email.
 
 Best regards,
-Your App Team
+AAI Financials
+www.aaifinancials.com
 """
 
     msg["Subject"] = "Reset Your Password"
@@ -70,7 +71,7 @@ def send_referral_email(to_email: str, referrer_email: str, referral_id: str):
     """
     msg = EmailMessage()
 
-    registration_link = "https://aaifinancials.com/app/sign-in"
+    registration_link = "https://aaifinancials.com/app/customer/sign-up"
 
     message = f"""
 Hello,
@@ -82,13 +83,15 @@ Click the link below to register as a customer:
 {registration_link}
 
 Best regards,
-Your App Team
+AAI Financials
+www.aaifinancials.com
 """
 
     msg["Subject"] = "You've been referred!"
     msg["From"] = email_address
     msg["To"] = to_email
     msg.set_content(message)
+    print(msg)
 
     try:
         with smtplib.SMTP_SSL("smtp.hostinger.com", 465) as smtp:

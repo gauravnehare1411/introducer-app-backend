@@ -23,11 +23,11 @@ async def submit_referral(
             "created_at": datetime.utcnow(),
             "status": "Pending",
         })
-        print(referral_data)
+
         await referrals_collection.insert_one(referral_data)
 
         send_referral_email(
-            to_email=referral.email,
+            to_email=referral.referralEmail,
             referrer_email=current_user.email,
             referral_id=current_user.referralId
         )
