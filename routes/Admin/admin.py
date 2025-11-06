@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, status as http_status
 from bson import ObjectId
-from config.database import users_collection, referrals_collection, registrations
+from config.database import users_collection, referrals_collection, mortgage_applications_collection
 from models.referral_models import StatusUpdate
 from models.user_models import _normalize_status, ALLOWED_REFERRAL_STATUSES
 from schemas.user_auth import requires_roles
@@ -18,9 +18,9 @@ def fix_id(doc):
     return doc
 
 
-@router.get("/users")
-async def get_all_users():
-    users_cursor = users_collection.find({})
+@router.get("/users/{role}")
+async def get_all_users(role: str):
+    users_cursor = users_collection.find({"roles": role})
     users = [fix_id(user) async for user in users_cursor]
     return users
 
@@ -117,8 +117,17 @@ async def list_referrals(status: Optional[str] = Query(
 
     return items
 
-@router.get("/registrations")
-async def get_registrations():
-    regs_cursor = registrations.find({})
-    regs = [fix_id(user) async for user in regs_cursor]
-    return regs
+
+@router.get("/customer-applications/{userId}")
+async def get_customer_applications(userId: str):
+    if not userId:
+        raise HTTPException(status_code=401, detail='User not found or authorized')
+    
+    applications = await mortgage_applications_collection.find({"user_id": userId}).to_list(length=None)
+    if not applications:
+        raise HTTPException(status_code=404, detail="User not found.")
+    
+    for doc in applications:
+        doc["_id"] = str(doc["_id"])
+    
+    return applications

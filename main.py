@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import  user_auth, referrals, admin, user_details, mortgage_applications, anaya_contact_forms
-from routes.Reg import reg
+from routes import  user_auth, referrals, user_details, mortgage_applications
+from routes.Admin import admin, applications_by_admin, save_and_upload
 
 app = FastAPI()
 
@@ -9,9 +9,10 @@ app.include_router(user_auth.router)
 app.include_router(referrals.router)
 app.include_router(admin.router)
 app.include_router(user_details.router)
-app.include_router(reg.router)
 app.include_router(mortgage_applications.router)
-app.include_router(anaya_contact_forms.router)
+app.include_router(save_and_upload.router)
+app.include_router(applications_by_admin.router)
+
 
 app.add_middleware(
     CORSMiddleware,

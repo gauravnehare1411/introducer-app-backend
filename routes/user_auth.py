@@ -231,7 +231,7 @@ async def login_for_access_token(
     refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     access_token = create_access_token(
-        data={"sub": user.email, "roles": user.email},
+        data={"sub": user.email, "roles": user.roles},
         expires_delta=access_token_expires
     )
     refresh_token = create_refresh_token(
@@ -257,20 +257,17 @@ async def refresh_access_token(request: RefreshTokenRequest):
         if email is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-        token_type = payload.get("type")
+        token_type = payload.get("scope")
         if token_type != "refresh":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
 
-        # Check if the user exists
         user = await users_collection.find_one({"email": email})
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-        # Generate new access and refresh tokens
         access_token_expires = timedelta(seconds=ACCESS_TOKEN_EXPIRE_SECONDS)
         refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
-        # Use the same structure as your login endpoint
         access_token = create_access_token(
             data={"sub": user["email"], "roles": user["roles"]},
             expires_delta=access_token_expires

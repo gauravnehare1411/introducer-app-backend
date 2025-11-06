@@ -30,7 +30,7 @@ async def create_admin_user():
         "contactnumber": contactnumber,
         "password": hash_password(password),
         "referralId": "ADMIN",
-        "roles": ["admin", "user", "customer"],
+        "roles": ["admin"],
         "created_at": datetime.utcnow(),
     }
 
