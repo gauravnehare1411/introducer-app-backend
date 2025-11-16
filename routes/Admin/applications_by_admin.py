@@ -6,9 +6,9 @@ from schemas.user_auth import get_current_user
 from schemas.gdrive_upload import get_drive_service, get_root_folder
 
 
-router = APIRouter()
+router = APIRouter(prefix='/admin')
 
-@router.get("/admin/mortgage-applications")
+@router.get("/mortgage-applications")
 async def get_user_mortgage_applications(current_user: User = Depends(get_current_user)):
     try:
         applications = await applications_by_admin_collection.find(
@@ -23,7 +23,7 @@ async def get_user_mortgage_applications(current_user: User = Depends(get_curren
         raise HTTPException(status_code=500, detail=f"Error fetching applications: {str(e)}")
 
 
-@router.delete("/admin/mortgage-application/{application_id}")
+@router.delete("/mortgage-application/{application_id}")
 async def delete_mortgage_application(
     application_id: str,
     current_user: dict = Depends(get_current_user)
