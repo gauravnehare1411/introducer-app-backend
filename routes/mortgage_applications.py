@@ -87,7 +87,7 @@ async def update_mortgage_application(
 ):
     try:
         application = await mortgage_applications_collection.find_one(
-            {"_id": ObjectId(application_id), "user_email": current_user.email}
+            {"_id": ObjectId(application_id)}
         )
         
         if not application:
