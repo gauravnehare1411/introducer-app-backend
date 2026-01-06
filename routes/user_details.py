@@ -61,7 +61,7 @@ async def password_reset_request(request: PasswordResetRequest):
         data={'sub': email, 'roles': user_roles},
         expires_delta=access_token_expires
     )
-    reset_link = f"https://aaifinancials.com/reset-password?token={token}"
+    reset_link = f"https://aaifinancials.com/portal/reset-password?token={token}"
 
     send_email(email, reset_link)
     return {"message": "Password reset link sent successfully."}
