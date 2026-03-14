@@ -28,6 +28,7 @@ verification_collection = db.verification_collection
 registrations = db.registrations
 mortgage_applications_collection = db.mortgage_applications_collection
 applications_by_admin_collection = db.applications_by_admin
+mortgage_form = db.mortgage_form
 
 
 
